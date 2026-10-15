@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lecture 2 Learning Dashboard</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#131c2e; --panel2:#18233a; --line:#25324d;
+    --text:#e6ecf7; --muted:#8fa0bf; --accent:#4f9dff; --accent2:#7c5cff;
+    --good:#3ddc97; --bad:#ff6b6b; --warn:#ffb84d;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5;min-height:100vh}
+  button{font:inherit;color:inherit;cursor:pointer}
+  .wrap{max-width:1000px;margin:0 auto;padding:16px}
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 16px}
+  h1{font-size:1.35rem;margin:0}
+  h1 small{display:block;color:var(--muted);font-weight:400;font-size:.8rem}
+  nav{display:flex;gap:6px;flex-wrap:wrap}
+  nav button{background:var(--panel);border:1px solid var(--line);padding:8px 14px;border-radius:10px;color:var(--muted)}
+  nav button.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+  h2{margin:0 0 12px;font-size:1.05rem}
+  .grid{display:grid;gap:12px}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:640px){.g3,.g2{grid-template-columns:1fr}}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .stat .v{font-size:1.9rem;font-weight:700}
+  .stat .l{color:var(--muted);font-size:.85rem}
+  .bar{height:10px;background:var(--panel2);border-radius:99px;overflow:hidden}
+  .bar>i{display:block;height:100%;border-radius:99px;transition:width .4s}
+  .row{display:flex;align-items:center;gap:10px;margin:10px 0;flex-wrap:wrap}
+  .row .name{width:130px;font-weight:600}
+  .row .bar{flex:1;min-width:120px}
+  .row .pct{width:90px;text-align:right;color:var(--muted);font-size:.85rem}
+  .tag{display:inline-block;font-size:.7rem;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+  .tag.weak{color:var(--bad);border-color:var(--bad)} .tag.ok{color:var(--good);border-color:var(--good)} .tag.mid{color:var(--warn);border-color:var(--warn)}
+  .btn{background:linear-gradient(135deg,var(--accent),var(--accent2));border:0;padding:10px 18px;border-radius:10px;color:#fff;font-weight:600}
+  .btn.ghost{background:var(--panel2);border:1px solid var(--line);color:var(--text);font-weight:500}
+  .btn.good{background:var(--good);color:#06281a} .btn.warn{background:var(--warn);color:#2b1a00}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{background:var(--panel2);border:1px solid var(--line);padding:6px 12px;border-radius:99px;color:var(--muted);font-size:.9rem}
+  .chip.on{background:rgba(79,157,255,.18);border-color:var(--accent);color:var(--text)}
+  label.f{display:block;color:var(--muted);font-size:.8rem;margin:12px 0 6px;text-transform:uppercase;letter-spacing:.04em}
+  .qhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:.85rem}
+  .timer{font-variant-numeric:tabular-nums;padding:3px 10px;border-radius:99px;border:1px solid var(--line)}
+  .timer.low{color:var(--bad);border-color:var(--bad)}
+  .qtext{font-size:1.1rem;font-weight:600;margin:14px 0}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);padding:12px 14px;border-radius:10px;margin:8px 0}
+  .opt:hover:not(:disabled){border-color:var(--accent)}
+  .opt.right{border-color:var(--good);background:rgba(61,220,151,.12)}
+  .opt.wrong{border-color:var(--bad);background:rgba(255,107,107,.12)}
+  .expl{margin-top:12px;padding:12px 14px;border-left:3px solid var(--accent);background:rgba(79,157,255,.08);border-radius:0 10px 10px 0}
+  .flip{perspective:1000px;margin:10px auto;max-width:560px}
+  .fc{position:relative;height:240px;transition:transform .5s;transform-style:preserve-3d;cursor:pointer}
+  .fc.flipped{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:16px;border:1px solid var(--line);padding:22px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:var(--panel2);overflow:auto}
+  .face.back{transform:rotateY(180deg);background:linear-gradient(160deg,#16294d,#1d2150)}
+  .face small{color:var(--muted);margin-bottom:8px}
+  .chat{height:340px;overflow:auto;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px}
+  .msg{max-width:85%;padding:9px 13px;border-radius:14px;margin:8px 0;white-space:pre-wrap}
+  .msg.u{margin-left:auto;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+  .msg.b{background:var(--panel);border:1px solid var(--line);border-bottom-left-radius:4px}
+  .inputrow{display:flex;gap:8px;margin-top:10px}
+  input[type=text],select{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:10px 12px;border-radius:10px;font:inherit}
+  input[type=text]{flex:1}
+  select{width:100%}
+  .muted{color:var(--muted)} .center{text-align:center}
+  .hist{width:100%;border-collapse:collapse;font-size:.88rem}
+  .hist th,.hist td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+  .hist th{color:var(--muted);font-weight:600}
+  .hidden{display:none}
+  footer{color:var(--muted);font-size:.8rem;text-align:center;padding:10px 0 24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Lecture 2 Learning Dashboard<small>Attention · Transformers · LLMs · Label Smoothing</small></h1>
+    <nav id="nav">
+      <button data-v="dash" class="active">Dashboard</button>
+      <button data-v="quiz">Quiz</button>
+      <button data-v="cards">Flashcards</button>
+      <button data-v="tutor">AI Tutor</button>
+    </nav>
+  </header>
+
+  <!-- DASHBOARD -->
+  <section id="v-dash">
+    <div class="grid g3" style="margin-bottom:16px">
+      <div class="stat"><div class="v" id="sAttempts">0</div><div class="l">Total attempts</div></div>
+      <div class="stat"><div class="v" id="sAcc">0%</div><div class="l">Overall accuracy</div></div>
+      <div class="stat"><div class="v" id="sBest">0%</div><div class="l">Best score</div></div>
+    </div>
+    <div class="card">
+      <h2>Weak-topic analysis</h2>
+      <div id="topicBars"></div>
+      <p class="muted" id="weakMsg" style="margin-bottom:0"></p>
+    </div>
+    <div class="card">
+      <h2>Flashcard progress</h2>
+      <div class="bar"><i id="cardBar" style="background:var(--good);width:0"></i></div>
+      <p class="muted" id="cardMsg" style="margin-bottom:0"></p>
+    </div>
+    <div class="card">
+      <h2>Recent attempts</h2>
+      <div id="history"></div>
+    </div>
+    <div class="center"><button class="btn ghost" id="resetBtn">Reset all progress</button></div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="v-quiz" class="hidden">
+    <div class="card" id="quizSetup">
+      <h2>Set up your quiz</h2>
+      <label class="f">Topics</label>
+      <div class="chips" id="topicChips"></div>
+      <label class="f">Difficulty</label>
+      <div class="chips" id="diffChips"></div>
+      <div class="grid g2">
+        <div><label class="f">Number of questions</label>
+          <select id="numQ"><option value="5">5</option><option value="10" selected>10</option><option value="0">All available</option></select></div>
+        <div><label class="f">Timer per question</label>
+          <select id="timerSel"><option value="0">Off</option><option value="20">20 seconds</option><option value="30" selected>30 seconds</option><option value="60">60 seconds</option></select></div>
+      </div>
+      <p class="muted" id="availMsg"></p>
+      <button class="btn" id="startQuiz">Start quiz</button>
+    </div>
+
+    <div class="card hidden" id="quizRun">
+      <div class="qhead"><span id="qCount"></span><span id="qMeta"></span><span class="timer" id="qTimer">--</span></div>
+      <div class="bar" style="margin-top:10px"><i id="qBar" style="background:var(--accent);width:0"></i></div>
+      <div class="qtext" id="qText"></div>
+      <div id="qOpts"></div>
+      <div class="expl hidden" id="qExpl"></div>
+      <div style="margin-top:14px"><button class="btn hidden" id="nextBtn">Next</button></div>
+    </div>
+
+    <div class="card hidden" id="quizDone">
+      <h2>Quiz finished</h2>
+      <div class="stat center"><div class="v" id="rScore"></div><div class="l" id="rPct"></div></div>
+      <div id="rTopics" style="margin-top:12px"></div>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="againBtn">New quiz</button>
+        <button class="btn ghost" id="toDash">View dashboard</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLASHCARDS -->
+  <section id="v-cards" class="hidden">
+    <div class="card">
+      <div class="grid g2">
+        <div><label class="f" style="margin-top:0">Topic</label><select id="cTopic"></select></div>
+        <div><label class="f" style="margin-top:0">Show</label>
+          <select id="cFilter"><option value="all">All cards</option><option value="new">Not marked yet</option><option value="revise">Revise again</option><option value="know">Known</option></select></div>
+      </div>
+      <p class="muted center" id="cInfo"></p>
+      <div class="flip"><div class="fc" id="fc"><div class="face front"><small>Question (tap to flip)</small><div id="fFront" style="font-size:1.1rem;font-weight:600"></div></div><div class="face back"><small>Answer</small><div id="fBack"></div></div></div></div>
+      <div class="center" style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+        <button class="btn ghost" id="cPrev">Previous</button>
+        <button class="btn warn" id="cRevise">Revise again</button>
+        <button class="btn good" id="cKnow">Know it</button>
+        <button class="btn ghost" id="cNext">Next</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TUTOR -->
+  <section id="v-tutor" class="hidden">
+    <div class="card">
+      <h2>Demo AI Tutor</h2>
+      <p class="muted" style="margin-top:0">A simple learning chatbot with ready-made explanations and examples. It does not use any live AI API.</p>
+      <div class="chips" id="tutorChips" style="margin-bottom:10px"></div>
+      <div class="chat" id="chat"></div>
+      <form class="inputrow" id="chatForm">
+        <input type="text" id="chatInput" placeholder="Ask about attention, transformers, LLMs, label smoothing..." autocomplete="off" />
+        <button class="btn" type="submit">Send</button>
+      </form>
+    </div>
+  </section>
+
+  <footer>Progress is saved in this browser (Local Storage).</footer>
+</div>
+
+<script>
+"use strict";
+/* ---------- DATA ---------- */
+const TOPICS = ["Attention","Transformers","LLMs","Label Smoothing"];
+const DIFFS = ["Easy","Medium","Hard"];
+
+const Q = [
+ // Attention
+ {t:"Attention",d:"Easy",q:"In self-attention, what do Q, K and V stand for?",o:["Query, Key, Value","Question, Keyword, Vector","Quantity, Kernel, Variance","Query, Kernel, Vector"],a:0,e:"Q = Query, K = Key, V = Value. Each token creates all three, and attention compares Queries with Keys to decide how much of each Value to use."},
+ {t:"Attention",d:"Easy",q:"What does Multi-Head Attention (MHA) do?",o:["Runs many self-attention operations in parallel","Uses one very large attention layer","Removes the need for embeddings","Only works on images"],a:0,e:"MHA runs several self-attention operations in parallel. Each one is called a head."},
+ {t:"Attention",d:"Medium",q:"After all heads finish, what happens to their outputs?",o:["They are concatenated and passed through a linear layer","They are averaged and thrown away","They are sent straight to Softmax","Only the best head is kept"],a:0,e:"The outputs of all heads are joined (concatenated) and then passed through a linear layer."},
+ {t:"Attention",d:"Medium",q:"Why do we use several heads instead of one?",o:["Different heads can learn different relationships between tokens","To make the model smaller","To avoid using Softmax","To remove positional encoding"],a:0,e:"One head might focus on grammar, another on meaning, another on which word refers to which. This is the 'many experts, many views' idea."},
+ {t:"Attention",d:"Hard",q:"In scaled dot-product attention, why are scores divided by √d_k?",o:["To stop large dot products from making Softmax too sharp","To make Q and K the same size","To remove the need for Values","To speed up the embedding layer"],a:0,e:"For large d_k, dot products become large, which pushes Softmax into very sharp regions with tiny gradients. Dividing by √d_k keeps the scores in a healthy range."},
+ {t:"Attention",d:"Hard",q:"With d_model = 512 and 8 heads, what is the size of each head (d_k)?",o:["64","512","8","4096"],a:0,e:"512 ÷ 8 = 64. Q, K and V are split into smaller parts, one for each head."},
+ // Transformers
+ {t:"Transformers",d:"Easy",q:"Which part of the Transformer generates the output?",o:["Decoder","Encoder","Tokenizer","Optimizer"],a:0,e:"The Encoder understands the input and the Decoder generates the output, one token at a time."},
+ {t:"Transformers",d:"Easy",q:"Why are positional encodings added to embeddings?",o:["Attention alone does not know the order of words","To make embeddings smaller","To replace tokenization","To apply label smoothing"],a:0,e:"Self-attention looks at all tokens at once, so it has no built-in sense of order. Positional encodings add the position information."},
+ {t:"Transformers",d:"Medium",q:"What does the Decoder start with when generating output?",o:["The [BOS] token","The [EOS] token","A random token","The last input token"],a:0,e:"The Decoder starts with [BOS] (Begin Of Sentence) and generates tokens one by one until [EOS]."},
+ {t:"Transformers",d:"Medium",q:"What is the job of Encoder-Decoder attention?",o:["It helps the Decoder focus on relevant parts of the input","It adds positions to tokens","It splits text into tokens","It smooths the labels"],a:0,e:"While writing each new word, the Decoder looks back at the most useful parts of the Encoder's output."},
+ {t:"Transformers",d:"Hard",q:"Why does the Decoder use masked self-attention?",o:["So a token cannot look at future tokens","To make training slower","To remove padding","To reduce the vocabulary"],a:0,e:"When generating, future tokens do not exist yet. The mask stops a position from peeking at later positions during training."},
+ {t:"Transformers",d:"Hard",q:"Which layers turn the Decoder's output into next-token probabilities?",o:["Linear layer followed by Softmax","Two Softmax layers","Positional encoding","Tokenizer"],a:0,e:"A linear layer gives a score for every token in the vocabulary, and Softmax turns those scores into a probability distribution."},
+ // LLMs
+ {t:"LLMs",d:"Easy",q:"What does LLM stand for?",o:["Large Language Model","Linear Learning Method","Long Layer Memory","Latent Label Mapping"],a:0,e:"LLM = Large Language Model, a very big model trained on lots of text."},
+ {t:"LLMs",d:"Easy",q:"Which architecture do most modern LLMs use?",o:["Decoder-only Transformer","Encoder-only CNN","Plain RNN","Decision tree"],a:0,e:"Modern LLMs mostly use decoder-only Transformer architectures."},
+ {t:"LLMs",d:"Medium",q:"How does an LLM generate a long answer?",o:["By predicting the next token again and again","By writing the whole answer at once","By copying from a database","By sorting words alphabetically"],a:0,e:"It predicts one token, adds it to the text, and repeats until it produces an end token."},
+ {t:"LLMs",d:"Medium",q:"What is a token?",o:["A small piece of text such as a word or part of a word","A password for the model","A type of GPU","A loss function"],a:0,e:"Tokenization splits text into small pieces called tokens. Each token is then converted into an embedding."},
+ {t:"LLMs",d:"Hard",q:"What does FlashAttention improve?",o:["Speed and memory use of attention computation","The number of heads","The tokenizer vocabulary","The label smoothing value"],a:0,e:"FlashAttention computes attention in a more efficient way, so training and inference are faster and use less memory."},
+ {t:"LLMs",d:"Hard",q:"What is the main idea of Grouped-Query Attention?",o:["Several query heads share the same key/value heads to save memory","Removing all Query vectors","Using only one token","Adding more Softmax layers"],a:0,e:"Sharing key/value heads across groups of query heads shrinks the memory needed during generation, which makes inference cheaper."},
+ // Label Smoothing
+ {t:"Label Smoothing",d:"Easy",q:"What problem does Label Smoothing reduce?",o:["Overconfidence of the model","Slow tokenization","Missing positions","Too many heads"],a:0,e:"It is a regularization technique that stops the model from becoming overconfident."},
+ {t:"Label Smoothing",d:"Easy",q:"With Label Smoothing, what happens to the wrong classes?",o:["They get a small probability instead of 0","They are removed","They get probability 1","Nothing changes"],a:0,e:"A small amount of probability is shared with the other classes instead of giving everything to the correct one."},
+ {t:"Label Smoothing",d:"Medium",q:"For K = 5 and ε = 0.1, what is the smoothed value of the correct class?",o:["0.92","0.90","0.98","1.00"],a:0,e:"(1 − 0.1) × 1 + 0.1/5 = 0.9 + 0.02 = 0.92."},
+ {t:"Label Smoothing",d:"Medium",q:"For K = 5 and ε = 0.1, what does each wrong class get?",o:["0.02","0.10","0.00","0.20"],a:0,e:"(1 − 0.1) × 0 + 0.1/5 = 0.02. Check: 0.92 + 4 × 0.02 = 1.00."},
+ {t:"Label Smoothing",d:"Hard",q:"For K = 4 and ε = 0.2, what is the smoothed value of the correct class?",o:["0.85","0.80","0.95","0.75"],a:0,e:"(1 − 0.2) × 1 + 0.2/4 = 0.8 + 0.05 = 0.85."},
+ {t:"Label Smoothing",d:"Hard",q:"If ε = 0, what are the smoothed labels?",o:["Same as the normal one-hot labels","All equal to 1/K","All zero","Random"],a:0,e:"With ε = 0 the formula becomes 1 × original label + 0, so nothing changes."}
+];
+
+const TUTOR = [
+ {k:["self attention","self-attention","attention","qkv","query","key","value"],title:"Self-Attention",
+  a:"Self-attention lets every word look at all the other words in the sentence and decide which ones matter most.\n\nEach token makes three vectors: Query (Q), Key (K) and Value (V). The Query is compared with every Key to get scores. Softmax turns the scores into weights, and the weights mix the Values.\n\nExample: in \"The animal did not cross the road because it was tired\", attention helps the word \"it\" focus on \"animal\"."},
+ {k:["multi head","multi-head","mha","head","heads"],title:"Multi-Head Attention",
+  a:"Multi-Head Attention runs many self-attention operations in parallel. Each one is called a head.\n\nQ, K and V are split into smaller parts, one for each head. Every head works at the same time. The outputs are joined (concatenated) and passed through a linear layer.\n\nExample: like many experts reading one sentence. One checks grammar, one checks meaning, one checks which word refers to which."},
+ {k:["transformer","transformers","encoder","decoder","end to end","end-to-end"],title:"Transformer flow",
+  a:"The flow is: Tokenization → Embeddings → Positional encoding → Encoder → Decoder (starts with [BOS]) → Encoder-Decoder attention → Linear + Softmax → next token. This repeats until [EOS].\n\nExample: for translation, the Encoder understands \"I love AI\" and the Decoder writes the translated words one by one."},
+ {k:["positional","position","order"],title:"Positional encoding",
+  a:"Attention looks at all words together, so it does not know their order by itself. Positional encodings are numbers added to the embeddings to tell the model where each word is.\n\nExample: without positions, \"dog bites man\" and \"man bites dog\" would look the same."},
+ {k:["bos","eos","token","tokens","tokenization","tokenize"],title:"Tokens, [BOS] and [EOS]",
+  a:"A token is a small piece of text, like a word or part of a word. Tokenization splits text into tokens, and each token becomes an embedding.\n\n[BOS] means Begin Of Sentence and starts the Decoder's output. [EOS] means End Of Sentence and tells the model to stop."},
+ {k:["llm","llms","large language","gpt","decoder only","decoder-only"],title:"LLMs",
+  a:"A Large Language Model is a big model trained on a lot of text. Most modern LLMs use a decoder-only Transformer.\n\nThey generate text by predicting the next token again and again.\n\nExample: given \"The sky is\", the model may give high probability to \"blue\", picks it, then continues."},
+ {k:["label smoothing","smoothing","overconfident","overconfidence","epsilon","regularization"],title:"Label Smoothing",
+  a:"Label Smoothing stops the model from becoming overconfident. Instead of giving probability 1 to the correct class and 0 to the rest, it shares a small amount with the other classes.\n\nFormula: smooth label = (1 − ε) × original label + ε / K\n\nExample (K = 5, ε = 0.1): correct class = 0.92 and each wrong class = 0.02. Total = 0.92 + 4 × 0.02 = 1.00."},
+ {k:["softmax","probability"],title:"Softmax",
+  a:"Softmax turns raw scores into probabilities that are positive and add up to 1.\n\nExample: scores [2, 1, 0] become roughly [0.67, 0.24, 0.09]."},
+ {k:["flash","flashattention","memory","faster","speed"],title:"FlashAttention",
+  a:"FlashAttention is a way to compute attention faster and with less memory. It gives the same result as normal attention but moves data in a smarter way on the GPU, so training and inference become quicker."},
+ {k:["formula","example","calculate","calculation"],title:"Label smoothing example",
+  a:"Try this: K = 4 and ε = 0.2.\nCorrect class = (1 − 0.2) × 1 + 0.2/4 = 0.85\nEach wrong class = 0.2/4 = 0.05\nTotal = 0.85 + 3 × 0.05 = 1.00"}
+];
+
+/* ---------- STORAGE ---------- */
+const KEY = "lecture2_dashboard_v1";
+function blank(){return {attempts:[],topics:{},cards:{}};}
+function load(){
+  try{const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.attempts&&s.topics&&s.cards) return s;}catch(e){}
+  return blank();
+}
+let mem = load();
+function save(){ try{localStorage.setItem(KEY,JSON.stringify(mem));}catch(e){} }
+
+/* ---------- HELPERS ---------- */
+const $ = id => document.getElementById(id);
+const pct = (a,b) => b ? Math.round(a*100/b) : 0;
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const colorFor = p => p>=75 ? "var(--good)" : p>=50 ? "var(--warn)" : "var(--bad)";
+
+/* ---------- NAV ---------- */
+function show(v){
+  document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.v===v));
+  ["dash","quiz","cards","tutor"].forEach(x=>$("v-"+x).classList.toggle("hidden",x!==v));
+  if(v==="dash") renderDash();
+  if(v==="cards") renderCard();
+  if(v!=="quiz") stopTimer();
+}
+$("nav").addEventListener("click",e=>{const b=e.target.closest("button"); if(b) show(b.dataset.v);});
+
+/* ---------- DASHBOARD ---------- */
+function renderDash(){
+  const at = mem.attempts;
+  $("sAttempts").textContent = at.length;
+  let c=0,t=0; TOPICS.forEach(k=>{const s=mem.topics[k]; if(s){c+=s.c;t+=s.t;}});
+  $("sAcc").textContent = pct(c,t)+"%";
+  $("sBest").textContent = (at.length?Math.max(...at.map(a=>pct(a.score,a.total))):0)+"%";
+
+  let html="", weak=[];
+  TOPICS.forEach(k=>{
+    const s=mem.topics[k]||{c:0,t:0}, p=pct(s.c,s.t);
+    let tag = s.t<3 ? '<span class="tag">not enough data</span>' : p<60 ? '<span class="tag weak">weak</span>' : p<80 ? '<span class="tag mid">improving</span>' : '<span class="tag ok">strong</span>';
+    if(s.t>=3 && p<60) weak.push(k);
+    html += '<div class="row"><div class="name">'+esc(k)+'</div><div class="bar"><i style="width:'+p+'%;background:'+colorFor(p)+'"></i></div><div class="pct">'+s.c+'/'+s.t+' · '+p+'%</div>'+tag+'</div>';
+  });
+  $("topicBars").innerHTML = html;
+  $("weakMsg").textContent = at.length===0 ? "Take a quiz to see which topics need more practice."
+    : weak.length ? "Focus on: "+weak.join(", ")+". Try a quiz on only these topics." : "No weak topics right now. Keep practising!";
+
+  const total=Q.length, known=Object.values(mem.cards).filter(x=>x==="know").length, rev=Object.values(mem.cards).filter(x=>x==="revise").length;
+  $("cardBar").style.width = pct(known,total)+"%";
+  $("cardMsg").textContent = known+" known · "+rev+" to revise · "+(total-known-rev)+" not marked yet (out of "+total+")";
+
+  if(!at.length){ $("history").innerHTML='<p class="muted">No attempts yet.</p>'; }
+  else{
+    $("history").innerHTML = '<table class="hist"><tr><th>Date</th><th>Level</th><th>Topics</th><th>Score</th></tr>'+
+      at.slice(-6).reverse().map(a=>'<tr><td>'+esc(a.date)+'</td><td>'+esc(a.diff)+'</td><td>'+esc(a.topics.join(", "))+'</td><td>'+a.score+'/'+a.total+' ('+pct(a.score,a.total)+'%)</td></tr>').join("")+'</table>';
+  }
+}
+$("resetBtn").onclick = ()=>{ if(confirm("Delete all saved progress?")){ mem=blank(); save(); renderDash(); } };
+
+/* ---------- QUIZ SETUP ---------- */
+let selTopics = new Set(TOPICS), selDiff = "Mixed";
+function renderChips(){
+  $("topicChips").innerHTML = TOPICS.map(t=>'<button class="chip '+(selTopics.has(t)?'on':'')+'" data-t="'+esc(t)+'">'+esc(t)+'</button>').join("");
+  $("diffChips").innerHTML = ["Mixed"].concat(DIFFS).map(d=>'<button class="chip '+(selDiff===d?'on':'')+'" data-d="'+d+'">'+d+'</button>').join("");
+  const n = pool().length;
+  $("availMsg").textContent = n+" question"+(n===1?"":"s")+" available for this selection.";
+  $("startQuiz").disabled = n===0;
+}
+function pool(){ return Q.filter(x=>selTopics.has(x.t) && (selDiff==="Mixed"||x.d===selDiff)); }
+$("topicChips").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  const t=b.dataset.t; selTopics.has(t) ? selTopics.delete(t) : selTopics.add(t); renderChips();
+});
+$("diffChips").addEventListener("click",e=>{const b=e.target.closest("button"); if(!b) return; selDiff=b.dataset.d; renderChips();});
+
+/* ---------- QUIZ RUN ---------- */
+let quiz=null, timerId=null;
+function stopTimer(){ if(timerId){clearInterval(timerId); timerId=null;} }
+$("startQuiz").onclick = ()=>{
+  let list = shuffle(pool()); const n=+$("numQ").value; if(n>0) list=list.slice(0,n);
+  if(!list.length) return;
+  // shuffle options per question
+  list = list.map(x=>{ const idx=shuffle([0,1,2,3]); return {...x, o:idx.map(i=>x.o[i]), a:idx.indexOf(x.a)}; });
+  quiz = {list,i:0,score:0,per:{},limit:+$("timerSel").value,locked:false};
+  $("quizSetup").classList.add("hidden"); $("quizDone").classList.add("hidden"); $("quizRun").classList.remove("hidden");
+  showQ();
+};
+function showQ(){
+  const x=quiz.list[quiz.i]; quiz.locked=false;
+  $("qCount").textContent = "Question "+(quiz.i+1)+" of "+quiz.list.length;
+  $("qMeta").textContent = x.t+" · "+x.d;
+  $("qBar").style.width = (quiz.i*100/quiz.list.length)+"%";
+  $("qText").textContent = x.q;
+  $("qOpts").innerHTML = x.o.map((o,i)=>'<button class="opt" data-i="'+i+'">'+esc(o)+'</button>').join("");
+  $("qExpl").classList.add("hidden"); $("nextBtn").classList.add("hidden");
+  $("nextBtn").textContent = quiz.i===quiz.list.length-1 ? "Finish" : "Next";
+  stopTimer();
+  if(quiz.limit>0){
+    quiz.left=quiz.limit; drawTimer();
+    timerId=setInterval(()=>{ quiz.left--; drawTimer(); if(quiz.left<=0){ stopTimer(); answer(-1); } },1000);
+  } else { $("qTimer").textContent="No timer"; $("qTimer").classList.remove("low"); }
+}
+function drawTimer(){ const t=$("qTimer"); t.textContent=quiz.left+"s"; t.classList.toggle("low",quiz.left<=5); }
+$("qOpts").addEventListener("click",e=>{ const b=e.target.closest(".opt"); if(b && !quiz.locked) answer(+b.dataset.i); });
+function answer(i){
+  if(quiz.locked) return; quiz.locked=true; stopTimer();
+  const x=quiz.list[quiz.i], ok = i===x.a;
+  if(ok) quiz.score++;
+  const p = quiz.per[x.t] || (quiz.per[x.t]={c:0,t:0}); p.t++; if(ok) p.c++;
+  document.querySelectorAll("#qOpts .opt").forEach((b,k)=>{ b.disabled=true; if(k===x.a) b.classList.add("right"); else if(k===i) b.classList.add("wrong"); });
+  $("qExpl").innerHTML = '<strong>'+(i===-1?"Time is up. ":ok?"Correct. ":"Not quite. ")+'</strong>'+esc(x.e);
+  $("qExpl").classList.remove("hidden"); $("nextBtn").classList.remove("hidden");
+}
+$("nextBtn").onclick = ()=>{ quiz.i++; quiz.i>=quiz.list.length ? finish() : showQ(); };
+function finish(){
+  stopTimer();
+  const total=quiz.list.length;
+  Object.keys(quiz.per).forEach(k=>{ const s=mem.topics[k]||(mem.topics[k]={c:0,t:0}); s.c+=quiz.per[k].c; s.t+=quiz.per[k].t; });
+  mem.attempts.push({date:new Date().toLocaleDateString(),diff:selDiff,topics:Object.keys(quiz.per),score:quiz.score,total});
+  save();
+  $("quizRun").classList.add("hidden"); $("quizDone").classList.remove("hidden");
+  $("rScore").textContent = quiz.score+" / "+total; $("rPct").textContent = pct(quiz.score,total)+"% correct";
+  $("rTopics").innerHTML = Object.keys(quiz.per).map(k=>{const p=pct(quiz.per[k].c,quiz.per[k].t);
+    return '<div class="row"><div class="name">'+esc(k)+'</div><div class="bar"><i style="width:'+p+'%;background:'+colorFor(p)+'"></i></div><div class="pct">'+quiz.per[k].c+'/'+quiz.per[k].t+'</div></div>';}).join("");
+}
+$("againBtn").onclick = ()=>{ $("quizDone").classList.add("hidden"); $("quizSetup").classList.remove("hidden"); renderChips(); };
+$("toDash").onclick = ()=>show("dash");
+
+/* ---------- FLASHCARDS ---------- */
+let deck=[], di=0;
+$("cTopic").innerHTML = '<option value="all">All topics</option>'+TOPICS.map(t=>'<option>'+esc(t)+'</option>').join("");
+function buildDeck(){
+  const t=$("cTopic").value, f=$("cFilter").value;
+  deck = Q.map((x,i)=>({id:"q"+i,x})).filter(c=>(t==="all"||c.x.t===t) && (f==="all" || (f==="new"?!mem.cards[c.id]:mem.cards[c.id]===f)));
+  if(di>=deck.length) di=0;
+}
+function renderCard(){
+  buildDeck(); $("fc").classList.remove("flipped");
+  if(!deck.length){ $("cInfo").textContent="No cards in this view."; $("fFront").textContent="Nothing here yet."; $("fBack").textContent=""; return; }
+  const c=deck[di], st=mem.cards[c.id];
+  $("cInfo").textContent = "Card "+(di+1)+" of "+deck.length+" · "+c.x.t+" · "+c.x.d+(st?" · marked: "+(st==="know"?"Known":"Revise again"):"");
+  $("fFront").textContent = c.x.q;
+  $("fBack").innerHTML = '<div style="font-size:1.05rem;font-weight:700;margin-bottom:8px">'+esc(c.x.o[c.x.a])+'</div><div class="muted" style="font-size:.9rem">'+esc(c.x.e)+'</div>';
+}
+$("fc").onclick = ()=>$("fc").classList.toggle("flipped");
+function mark(s){ if(!deck.length) return; mem.cards[deck[di].id]=s; save(); const f=$("cFilter").value; if(f!=="all"&&f!==s){ /* card leaves this view */ } else di++; renderCard(); }
+$("cKnow").onclick=()=>mark("know"); $("cRevise").onclick=()=>mark("revise");
+$("cNext").onclick=()=>{ if(deck.length){di=(di+1)%deck.length; renderCard();} };
+$("cPrev").onclick=()=>{ if(deck.length){di=(di-1+deck.length)%deck.length; renderCard();} };
+$("cTopic").onchange=$("cFilter").onchange=()=>{di=0; renderCard();};
+
+/* ---------- AI TUTOR (demo, no API) ---------- */
+function addMsg(text,who){ const d=document.createElement("div"); d.className="msg "+who; d.textContent=text; $("chat").appendChild(d); $("chat").scrollTop=$("chat").scrollHeight; }
+function reply(text){
+  const s=text.toLowerCase(); let best=null,score=0;
+  TUTOR.forEach(e=>{ let n=0; e.k.forEach(k=>{ if(s.includes(k)) n+=k.length; }); if(n>score){score=n;best=e;} });
+  return best ? best.a : "I can explain these demo topics: self-attention, multi-head attention, the Transformer flow, positional encoding, tokens, LLMs, label smoothing, Softmax and FlashAttention. Try asking one of them, or tap a button above.";
+}
+$("tutorChips").innerHTML = ["Self-attention","Multi-head attention","Transformer flow","Label smoothing","LLMs","Label smoothing example"].map(t=>'<button class="chip">'+t+'</button>').join("");
+$("tutorChips").addEventListener("click",e=>{ const b=e.target.closest(".chip"); if(!b) return; addMsg(b.textContent,"u"); addMsg(reply(b.textContent),"b"); });
+$("chatForm").addEventListener("submit",e=>{ e.preventDefault(); const v=$("chatInput").value.trim(); if(!v) return; addMsg(v,"u"); addMsg(reply(v),"b"); $("chatInput").value=""; });
+addMsg("Hi! I am a demo tutor with ready-made explanations. Ask me about attention, transformers, LLMs or label smoothing.","b");
+
+/* ---------- INIT ---------- */
+renderChips(); renderDash();
+</script>
+</body>
+</html>

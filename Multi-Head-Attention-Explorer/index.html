@@ -1,0 +1,146 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Head Attention Explorer</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+
+    <header class="hero">
+        <p class="eyebrow">TRANSFORMER LAB / 01</p>
+        <h1>Multi-Head Attention <span>Explorer</span></h1>
+        <p class="subtitle">
+            Explore how different attention heads can focus on
+            different tokens in the same sentence.
+        </p>
+    </header>
+
+    <main class="container">
+
+        <section class="panel controls">
+            <label for="sentence">Your sentence</label>
+            <textarea id="sentence" rows="2"
+                placeholder="Enter a sentence...">The cat sat on the mat</textarea>
+
+            <div class="control-row">
+                <div class="field">
+                    <label for="headCount">Number of heads</label>
+                    <select id="headCount">
+                        <option value="1">1 Head</option>
+                        <option value="2">2 Heads</option>
+                        <option value="4" selected>4 Heads</option>
+                        <option value="8">8 Heads</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="maskToggle">Causal mask</label>
+                    <select id="maskToggle">
+                        <option value="off">OFF</option>
+                        <option value="on">ON</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="button-row">
+                <button id="generateBtn" class="primary">
+                    Generate Attention
+                </button>
+                <button id="randomBtn" class="secondary">
+                    New Random Weights
+                </button>
+            </div>
+
+            <label class="check-label">
+                <input type="checkbox" id="showNumbers" checked>
+                Show cell values
+            </label>
+
+            <p class="hint">
+                Use up to 12 words. Random weights are used;
+                no pretrained model is required.
+            </p>
+            <p id="errorMessage" class="error" role="alert"></p>
+        </section>
+
+        <section class="panel">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">VISUALIZATION</p>
+                    <h2>Attention Heatmaps</h2>
+                </div>
+                <span id="tokenCount" class="pill">6 tokens</span>
+            </div>
+
+            <div class="legend">
+                <span class="legend-swatch"></span>
+                <span>Brighter cells = higher attention</span>
+            </div>
+
+            <div id="heatmaps" class="heatmaps"></div>
+        </section>
+
+        <section class="panel">
+            <p class="eyebrow">TOKEN INSPECTOR</p>
+            <h2>Where is each head looking?</h2>
+            <p class="hint">
+                Select a token in any heatmap row to inspect its
+                strongest attention connection.
+            </p>
+            <div id="inspector" class="inspector">
+                Select a token row to see its attention details.
+            </div>
+        </section>
+
+        <section class="panel">
+            <p class="eyebrow">HOW IT WORKS</p>
+            <h2>Inside Multi-Head Attention</h2>
+
+            <div class="steps">
+                <article class="step">
+                    <span>01</span>
+                    <h3>Input tokens</h3>
+                    <p>Split the sentence into individual tokens.</p>
+                </article>
+                <article class="step">
+                    <span>02</span>
+                    <h3>Q, K and V</h3>
+                    <p>Create query, key and value vectors using weights.</p>
+                </article>
+                <article class="step">
+                    <span>03</span>
+                    <h3>Multiple heads</h3>
+                    <p>Each head uses its own weights and can learn a different view.</p>
+                </article>
+                <article class="step">
+                    <span>04</span>
+                    <h3>Attention scores</h3>
+                    <p>Compare queries and keys using scaled dot products.</p>
+                </article>
+                <article class="step">
+                    <span>05</span>
+                    <h3>Softmax</h3>
+                    <p>Convert scores into probabilities that sum to 1 per row.</p>
+                </article>
+            </div>
+
+            <p class="note">
+                <strong>Learning demo:</strong> This explorer uses
+                randomly initialized vectors and weights. The patterns
+                are not learned language relationships and may change
+                every time you generate new weights.
+            </p>
+        </section>
+
+    </main>
+
+    <footer>
+        Multi-Head Attention Explorer · A small interactive learning project
+    </footer>
+
+</body>
+</html>
